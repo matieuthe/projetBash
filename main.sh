@@ -5,18 +5,17 @@ tableau=( 0 0 0 0 0 0 0 0 0 )
 
 function initGame(){
     #Change the person who start
-    if [ $startingPlayer = 1 ]
-    then
-        startingPlayer=2
-    else
-        startingPlayer=1
-    fi
+    startingPlayer=$(( ( $startingPlayer % 2 ) + 1 ))
+    
     currentPlayer=$startingPlayer
-
     #init the element of table to 0
     for((i=0; i < 9; i++)){
         tableau[i]=0
     }  
+}
+
+function changeCurrentPlayer(){
+    currentPlayer=$(( ( $currentPlayer % 2 ) + 1 ))
 }
 
 function printMap(){
@@ -31,15 +30,6 @@ function printMap(){
     echo "    Z    |  ${tableau[6]}  |  ${tableau[7]}  |  ${tableau[8]}  |"
     echo "         |-----|-----|-----|"
     echo ""
-}
-
-function changeCurrentPlayer(){
-    if [ $currentPlayer = 1 ]
-    then
-        currentPlayer=2
-    else
-        currentPlayer=1
-    fi
 }
 
 function IARandom(){  
@@ -104,66 +94,66 @@ function enterCase(){
             tableau[0]=$currentPlayer
         else
             echo "This case is not empty"
-            playPlayer
+            enterCase
         fi;;
     X2) if [ ${tableau[1]} -eq 0 ]
         then
             tableau[1]=$currentPlayer
         else
             echo "This case is not empty"
-            playPlayer
+            enterCase
         fi;;
     X3) if [ ${tableau[2]} -eq 0 ]
         then
             tableau[2]=$currentPlayer
         else
             echo "This case is not empty"
-            playPlayer
+            enterCase
         fi;;
     Y1) if [ ${tableau[3]} -eq 0 ]
         then
             tableau[3]=$currentPlayer
         else
             echo "This case is not empty"
-            playPlayer
+            enterCase
         fi;;
     Y2) if [ ${tableau[4]} -eq 0 ]
         then
             tableau[4]=$currentPlayer
         else
             echo "This case is not empty"
-            playPlayer
+            enterCase
         fi;;
     Y3) if [ ${tableau[5]} -eq 0 ]
         then
             tableau[5]=$currentPlayer
         else
             echo "This case is not empty"
-            playPlayer
+            enterCase
         fi;;
     Z1) if [ ${tableau[6]} -eq 0 ]
         then
             tableau[6]=$currentPlayer
         else
             echo "This case is not empty"
-            playPlayer
+            enterCase
         fi;;
     Z2) if [ ${tableau[7]} -eq 0 ]
         then
             tableau[7]=$currentPlayer
         else
             echo "This case is not empty"
-            playPlayer
+            enterCase
         fi;;
     Z3) if [ ${tableau[8]} -eq 0 ]
         then
             tableau[8]=$currentPlayer
         else
             echo "This case is not empty"
-            playPlayer
+            enterCase
         fi;;
     *) echo "Not a case !";
-        playPlayer
+        enterCase
     esac
 }
 
@@ -185,19 +175,17 @@ function gameOneVsOne(){
 function gameIANoob(){
     initGame
     printMap
-    currentPlayer=1
-    iaOrPlayer=1
     while [[ $(checkEnd) = 0 ]]
     do
-        if [ $iaOrPlayer -eq 1 ]
+        if [ $currentPlayer -eq 1 ]
         then
             enterCase
             printMap
-            iaOrPlayer=0
+            changeCurrentPlayer
         else
             IARandom
             printMap
-            iaOrPlayer=1
+            changeCurrentPlayer
         fi
     done
     
@@ -208,7 +196,6 @@ function gameIANoob(){
 function gameIAForte(){
     initGame
     printMap
-    currentPlayer=1
     iaOrPlayer=1
     while [[ $(checkEnd) = 0 ]]
     do
@@ -244,7 +231,6 @@ function menu(){
     *) echo "Enter a valid numbze";
         menu
     esac
-    
 }
 
 echo "----------------"
