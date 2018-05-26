@@ -19,7 +19,7 @@ function changeCurrentPlayer(){
 }
 
 function printMap(){
-    clear
+    #clear
     echo ""
     echo "            1     2     3"
     echo "         |-----|-----|-----|"
@@ -62,26 +62,172 @@ function IARandom(){
     echo $casePlay
 }
 
-function checkEnd(){
-    if [ ${tableau[0]} -eq ${tableau[1]} ] && [ ${tableau[1]} -eq ${tableau[2]} ] && [ ${tableau[0]} -ne 0 ] ; then echo ${tableau[0]} ; fi
-    if [ ${tableau[3]} -eq ${tableau[4]} ] && [ ${tableau[4]} -eq ${tableau[5]} ] && [ ${tableau[3]} -ne 0 ] ; then echo ${tableau[3]} ; fi
-    if [ ${tableau[6]} -eq ${tableau[7]} ] && [ ${tableau[7]} -eq ${tableau[8]} ] && [ ${tableau[6]} -ne 0 ] ; then echo ${tableau[6]} ; fi
-    
-    if [ ${tableau[0]} -eq ${tableau[3]} ] && [ ${tableau[3]} -eq ${tableau[6]} ] && [ ${tableau[6]} -ne 0 ] ; then echo ${tableau[6]} ; fi
-    if [ ${tableau[1]} -eq ${tableau[4]} ] && [ ${tableau[4]} -eq ${tableau[7]} ] && [ ${tableau[7]} -ne 0 ] ; then echo ${tableau[7]} ; fi
-    if [ ${tableau[2]} -eq ${tableau[5]} ] && [ ${tableau[5]} -eq ${tableau[8]} ] && [ ${tableau[8]} -ne 0 ] ; then echo ${tableau[8]} ; fi
-    
-    if [ ${tableau[0]} -eq ${tableau[4]} ] && [ ${tableau[4]} -eq ${tableau[8]} ] && [ ${tableau[8]} -ne 0 ] ; then echo ${tableau[7]} ; fi
-    if [ ${tableau[2]} -eq ${tableau[4]} ] && [ ${tableau[4]} -eq ${tableau[6]} ] && [ ${tableau[6]} -ne 0 ] ; then echo ${tableau[6]} ; fi
-    
-    j=5
-    for((i=0; i < 9; i++)){
-        if [ ${tableau[i]=0} -eq 0 ]
+function IAMinMax(){
+    #If the game is finish
+    if [[ $(checkEnd) -ne 0 ]]
+    then
+        if [[ $(checkEnd) -eq 5 ]]
         then
-            j=0
+            scoreMinMax=0
+        elif [[ $(checkEnd) -eq 1 ]]
+        then
+            scoreMinMax=-10
+        else 
+            scoreMinMax=10
         fi
-    }
-    echo $j
+    else
+        nbEmpty=0
+        local caseVide=()
+        indexCase=0
+        #Count number of empty case and get their id
+        for i in "${tableau[@]}"
+        do
+            if [ $i -eq 0 ]
+            then
+                nbEmpty=$(( $nbEmpty + 1 ))
+                caseVide+=($indexCase)
+            fi
+            indexCase=$(( $indexCase + 1 ))
+        done
+        
+        local scoreFree=()
+        compteur=0
+        for i in "${caseVide[@]}"
+        do
+            tableau[$i]=$currentPlayer
+            changeCurrentPlayer
+            local stockItemp=$i
+            IAMinMax
+            i=$stockItemp
+            scoreFree+=($scoreMinMax)
+            compteur=$(( $compteur + 1 ))
+            changeCurrentPlayer
+            tableau[$i]=0
+        done
+        
+        bestmoove=-1
+        scoreMinMax=0
+        compteur=0
+        if [[ $currentPlayer -eq 2 ]]
+        then
+            scoreMinMax=-1000
+            for i in "${scoreFree[@]}"
+            do
+                if [[ $scoreMinMax -lt $i ]]
+                then
+                    scoreMinMax=$i
+                    bestmoove=${caseVide[$compteur]}
+                fi
+                compteur=$(( $compteur + 1 ))
+            done
+        else
+            scoreMinMax=1000
+            for i in "${scoreFree[@]}"
+            do
+                if [[ $scoreMinMax -gt $i ]]
+                then
+                    scoreMinMax=$i
+                    bestmoove=${caseVide[$compteur]}
+                fi
+                compteur=$(( $compteur + 1 ))
+            done
+        fi
+    fi
+}
+
+
+function IAMinMaxOpt(){
+    #If the game is finish
+    if [[ $(checkEnd) -ne 0 ]]
+    then
+        if [[ $(checkEnd) -eq 5 ]]
+        then
+            scoreMinMax=0
+        elif [[ $(checkEnd) -eq 1 ]]
+        then
+            scoreMinMax=-10
+        else 
+            scoreMinMax=10
+        fi
+    else
+        nbEmpty=0
+        local caseVide=()
+        indexCase=0
+        #Count number of empty case and get their id
+        for i in "${tableau[@]}"
+        do
+            if [ $i -eq 0 ]
+            then
+                nbEmpty=$(( $nbEmpty + 1 ))
+                caseVide+=($indexCase)
+            fi
+            indexCase=$(( $indexCase + 1 ))
+        done
+        
+        compteur=0
+        for i in "${caseVide[@]}"
+        do
+            tableau[$i]=$currentPlayer
+            changeCurrentPlayer
+            local stockItemp=$i
+            IAMinMax
+            i=$stockItemp
+            compteur=$(( $compteur + 1 ))
+            changeCurrentPlayer
+            tableau[$i]=0
+        done
+        
+        bestmoove=-1
+        scoreMinMax=0
+        compteur=0
+        if [[ $currentPlayer -eq 2 ]]
+        then
+            scoreMinMax=-1000
+            for i in "${scoreFree[@]}"
+            do
+                if [[ $scoreMinMax -lt $i ]]
+                then
+                    scoreMinMax=$i
+                    bestmoove=${caseVide[$compteur]}
+                fi
+                compteur=$(( $compteur + 1 ))
+            done
+        else
+            scoreMinMax=1000
+            for i in "${scoreFree[@]}"
+            do
+                if [[ $scoreMinMax -gt $i ]]
+                then
+                    scoreMinMax=$i
+                    bestmoove=${caseVide[$compteur]}
+                fi
+                compteur=$(( $compteur + 1 ))
+            done
+        fi
+    fi
+}
+
+function checkEnd(){
+    if [ ${tableau[0]} -eq ${tableau[1]} ] && [ ${tableau[1]} -eq ${tableau[2]} ] && [ ${tableau[0]} -ne 0 ] ; then echo ${tableau[0]} ; 
+    elif [ ${tableau[3]} -eq ${tableau[4]} ] && [ ${tableau[4]} -eq ${tableau[5]} ] && [ ${tableau[3]} -ne 0 ] ; then echo ${tableau[3]} ;
+    elif [ ${tableau[6]} -eq ${tableau[7]} ] && [ ${tableau[7]} -eq ${tableau[8]} ] && [ ${tableau[6]} -ne 0 ] ; then echo ${tableau[6]} ; 
+    
+    elif [ ${tableau[0]} -eq ${tableau[3]} ] && [ ${tableau[3]} -eq ${tableau[6]} ] && [ ${tableau[6]} -ne 0 ] ; then echo ${tableau[6]} ; 
+    elif [ ${tableau[1]} -eq ${tableau[4]} ] && [ ${tableau[4]} -eq ${tableau[7]} ] && [ ${tableau[7]} -ne 0 ] ; then echo ${tableau[7]} ; 
+    elif [ ${tableau[2]} -eq ${tableau[5]} ] && [ ${tableau[5]} -eq ${tableau[8]} ] && [ ${tableau[8]} -ne 0 ] ; then echo ${tableau[8]} ; 
+    
+    elif [ ${tableau[0]} -eq ${tableau[4]} ] && [ ${tableau[4]} -eq ${tableau[8]} ] && [ ${tableau[8]} -ne 0 ] ; then echo ${tableau[8]} ; 
+    elif [ ${tableau[2]} -eq ${tableau[4]} ] && [ ${tableau[4]} -eq ${tableau[6]} ] && [ ${tableau[6]} -ne 0 ] ; then echo ${tableau[6]} ; 
+    else
+        j=5
+        for((i=0; i < 9; i++)){
+            if [ ${tableau[i]=0} -eq 0 ]
+            then
+                j=0
+            fi
+        }
+        echo $j
+    fi
 }
 
 function enterCase(){
@@ -196,21 +342,23 @@ function gameIANoob(){
 function gameIAForte(){
     initGame
     printMap
-    iaOrPlayer=1
+    tableau[0]=2
+    tableau[8]=1
+    currentPlayer=2
     while [[ $(checkEnd) = 0 ]]
     do
-        if [ $iaOrPlayer -eq 1 ]
+        if [ $currentPlayer -eq 1 ]
         then
             enterCase
             printMap
-            iaOrPlayer=0
+            changeCurrentPlayer
         else
-            IARandom
+            IAMinMax
+            tableau[$bestmoove]=2
             printMap
-            iaOrPlayer=1
+            changeCurrentPlayer
         fi
     done
-    
     #come back to the menu
     menu
 }
