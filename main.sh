@@ -42,7 +42,6 @@ function IARandom(){
             compteur=$((compteur + 1))
         fi
     done
-    
     #On fait un ramdom sur ce nombre
     casePlay=$(( RANDOM % $compteur ))
     compteur=0
@@ -62,21 +61,21 @@ function IARandom(){
     echo $casePlay
 }
 
-function IAMinMax(){
+IACalcMin(){
+    tempCheck=$(checkEnd)
     #If the game is finish
-    if [[ $(checkEnd) -ne 0 ]]
+    if [[ $tempCheck -ne 0 ]]
     then
-        if [[ $(checkEnd) -eq 5 ]]
+        if [[ $tempCheck -eq 2 ]]
         then
-            scoreMinMax=0
-        elif [[ $(checkEnd) -eq 1 ]]
+            scoreMinMax=10
+        elif [[ $tempCheck -eq 1 ]]
         then
             scoreMinMax=-10
         else 
-            scoreMinMax=10
+            scoreMinMax=0
         fi
     else
-        nbEmpty=0
         local caseVide=()
         indexCase=0
         #Count number of empty case and get their id
@@ -84,73 +83,51 @@ function IAMinMax(){
         do
             if [ $i -eq 0 ]
             then
-                nbEmpty=$(( $nbEmpty + 1 ))
                 caseVide+=($indexCase)
             fi
             indexCase=$(( $indexCase + 1 ))
         done
         
-        local scoreFree=()
-        compteur=0
+        local bestTemp=-1
+        local scoreTemp=1000
+        
         for i in "${caseVide[@]}"
         do
-            tableau[$i]=$currentPlayer
-            changeCurrentPlayer
+            tableau[$i]=1
             local stockItemp=$i
-            IAMinMax
+            IACalcMax
             i=$stockItemp
-            scoreFree+=($scoreMinMax)
-            compteur=$(( $compteur + 1 ))
-            changeCurrentPlayer
             tableau[$i]=0
+            if [[ $scoreTemp -gt $scoreMinMax ]]
+            then
+                local scoreTemp=$scoreMinMax
+                local bestTemp=$i
+                if [[ $scoreTemp -eq -10 ]]
+                then
+                    break
+                fi
+            fi
         done
-        
-        bestmoove=-1
-        scoreMinMax=0
-        compteur=0
-        if [[ $currentPlayer -eq 2 ]]
-        then
-            scoreMinMax=-1000
-            for i in "${scoreFree[@]}"
-            do
-                if [[ $scoreMinMax -lt $i ]]
-                then
-                    scoreMinMax=$i
-                    bestmoove=${caseVide[$compteur]}
-                fi
-                compteur=$(( $compteur + 1 ))
-            done
-        else
-            scoreMinMax=1000
-            for i in "${scoreFree[@]}"
-            do
-                if [[ $scoreMinMax -gt $i ]]
-                then
-                    scoreMinMax=$i
-                    bestmoove=${caseVide[$compteur]}
-                fi
-                compteur=$(( $compteur + 1 ))
-            done
-        fi
+        scoreMinMax=$scoreTemp
+        bestmoove=$bestTemp
     fi
 }
 
-
-function IAMinMaxOpt(){
+IACalcMax(){
+    tempCheck=$(checkEnd)
     #If the game is finish
-    if [[ $(checkEnd) -ne 0 ]]
+    if [[ $tempCheck -ne 0 ]]
     then
-        if [[ $(checkEnd) -eq 5 ]]
+        if [[ $tempCheck -eq 2 ]]
         then
-            scoreMinMax=0
-        elif [[ $(checkEnd) -eq 1 ]]
+            scoreMinMax=10
+        elif [[ $tempCheck -eq 1 ]]
         then
             scoreMinMax=-10
         else 
-            scoreMinMax=10
+            scoreMinMax=0
         fi
     else
-        nbEmpty=0
         local caseVide=()
         indexCase=0
         #Count number of empty case and get their id
@@ -158,54 +135,36 @@ function IAMinMaxOpt(){
         do
             if [ $i -eq 0 ]
             then
-                nbEmpty=$(( $nbEmpty + 1 ))
                 caseVide+=($indexCase)
             fi
             indexCase=$(( $indexCase + 1 ))
         done
         
-        compteur=0
+        local bestTemp=-1
+        local scoreTemp=-1000
+        
         for i in "${caseVide[@]}"
         do
-            tableau[$i]=$currentPlayer
-            changeCurrentPlayer
+            tableau[$i]=2
             local stockItemp=$i
-            IAMinMax
+            IACalcMin
             i=$stockItemp
-            compteur=$(( $compteur + 1 ))
-            changeCurrentPlayer
             tableau[$i]=0
+            if [[ $scoreTemp -lt $scoreMinMax ]]
+            then
+                local scoreTemp=$scoreMinMax
+                local bestTemp=$i
+                if [[ $scoreTemp -eq 10 ]]
+                then
+                    break
+                fi
+            fi
         done
-        
-        bestmoove=-1
-        scoreMinMax=0
-        compteur=0
-        if [[ $currentPlayer -eq 2 ]]
-        then
-            scoreMinMax=-1000
-            for i in "${scoreFree[@]}"
-            do
-                if [[ $scoreMinMax -lt $i ]]
-                then
-                    scoreMinMax=$i
-                    bestmoove=${caseVide[$compteur]}
-                fi
-                compteur=$(( $compteur + 1 ))
-            done
-        else
-            scoreMinMax=1000
-            for i in "${scoreFree[@]}"
-            do
-                if [[ $scoreMinMax -gt $i ]]
-                then
-                    scoreMinMax=$i
-                    bestmoove=${caseVide[$compteur]}
-                fi
-                compteur=$(( $compteur + 1 ))
-            done
-        fi
+        scoreMinMax=$scoreTemp
+        bestmoove=$bestTemp
     fi
 }
+
 
 function checkEnd(){
     if [ ${tableau[0]} -eq ${tableau[1]} ] && [ ${tableau[1]} -eq ${tableau[2]} ] && [ ${tableau[0]} -ne 0 ] ; then echo ${tableau[0]} ; 
@@ -224,6 +183,7 @@ function checkEnd(){
             if [ ${tableau[i]=0} -eq 0 ]
             then
                 j=0
+                break
             fi
         }
         echo $j
@@ -342,7 +302,7 @@ function gameIANoob(){
 function gameIAForte(){
     initGame
     printMap
-    tableau[0]=2
+    #tableau[0]=2
     tableau[8]=1
     currentPlayer=2
     while [[ $(checkEnd) = 0 ]]
@@ -353,7 +313,7 @@ function gameIAForte(){
             printMap
             changeCurrentPlayer
         else
-            IAMinMax
+            IACalcMax
             tableau[$bestmoove]=2
             printMap
             changeCurrentPlayer

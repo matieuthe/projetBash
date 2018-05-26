@@ -88,3 +88,243 @@ function playPlayer(){
         playPlayer
     esac
 }
+
+function IAMinMax(){
+    #If the game is finish
+    if [[ $(checkEnd) -ne 0 ]]
+    then
+        if [[ $(checkEnd) -eq 5 ]]
+        then
+            scoreMinMax=0
+        elif [[ $(checkEnd) -eq 1 ]]
+        then
+            scoreMinMax=-10
+        else 
+            scoreMinMax=10
+        fi
+    else
+        nbEmpty=0
+        local caseVide=()
+        indexCase=0
+        #Count number of empty case and get their id
+        for i in "${tableau[@]}"
+        do
+            if [ $i -eq 0 ]
+            then
+                nbEmpty=$(( $nbEmpty + 1 ))
+                caseVide+=($indexCase)
+            fi
+            indexCase=$(( $indexCase + 1 ))
+        done
+        
+        local scoreFree=()
+        compteur=0
+        for i in "${caseVide[@]}"
+        do
+            tableau[$i]=$currentPlayer
+            changeCurrentPlayer
+            local stockItemp=$i
+            IAMinMax
+            i=$stockItemp
+            scoreFree+=($scoreMinMax)
+            compteur=$(( $compteur + 1 ))
+            changeCurrentPlayer
+            tableau[$i]=0
+        done
+        
+        bestmoove=-1
+        scoreMinMax=0
+        compteur=0
+        if [[ $currentPlayer -eq 2 ]]
+        then
+            scoreMinMax=-1000
+            for i in "${scoreFree[@]}"
+            do
+                if [[ $scoreMinMax -lt $i ]]
+                then
+                    scoreMinMax=$i
+                    bestmoove=${caseVide[$compteur]}
+                fi
+                compteur=$(( $compteur + 1 ))
+            done
+        else
+            scoreMinMax=1000
+            for i in "${scoreFree[@]}"
+            do
+                if [[ $scoreMinMax -gt $i ]]
+                then
+                    scoreMinMax=$i
+                    bestmoove=${caseVide[$compteur]}
+                fi
+                compteur=$(( $compteur + 1 ))
+            done
+        fi
+    fi
+}
+
+
+function IAMinMaxOpt(){
+    #If the game is finish
+    if [[ $(checkEnd) -ne 0 ]]
+    then
+        if [[ $(checkEnd) -eq 5 ]]
+        then
+            scoreMinMax=0
+        elif [[ $(checkEnd) -eq 1 ]]
+        then
+            scoreMinMax=-10
+        else 
+            scoreMinMax=10
+        fi
+    else
+        local caseVide=()
+        indexCase=0
+        #Count number of empty case and get their id
+        for i in "${tableau[@]}"
+        do
+            if [ $i -eq 0 ]
+            then
+                caseVide+=($indexCase)
+            fi
+            indexCase=$(( $indexCase + 1 ))
+        done
+        
+        local bestTemp=-1
+        if [[ $currentPlayer -eq 2 ]]
+        then
+            local scoreTemp=-1000
+        else
+            local scoreTemp=1000
+        fi
+        
+        local comptTemp=0
+        for i in "${caseVide[@]}"
+        do
+            tableau[$i]=$currentPlayer
+            changeCurrentPlayer
+            local stockItemp=$i
+            IAMinMaxOpt
+            i=$stockItemp
+            changeCurrentPlayer
+            tableau[$i]=0
+            if [[ $currentPlayer -eq 2 ]] && [[ $scoreTemp -lt $scoreMinMax ]]
+            then
+                local scoreTemp=$scoreMinMax
+                local bestTemp=${caseVide[$comptTemp]}
+            elif [[ $currentPlayer -eq 1 ]] && [[ $scoreTemp -gt $scoreMinMax ]]
+            then
+                local scoreTemp=$scoreMinMax
+                local bestTemp=${caseVide[$comptTemp]}
+            fi
+            local comptTemp=$(( $comptTemp + 1))
+        done
+        scoreMinMax=$scoreTemp
+        bestmoove=$bestTemp
+    fi
+}
+
+
+#Avant modif sur tableau
+IACalcMin(){
+    tempCheck=$(checkEnd)
+    #If the game is finish
+    if [[ $tempCheck -ne 0 ]]
+    then
+        if [[ $tempCheck -eq 2 ]]
+        then
+            scoreMinMax=10
+        elif [[ $tempCheck -eq 1 ]]
+        then
+            scoreMinMax=-10
+        else 
+            scoreMinMax=0
+        fi
+    else
+        local caseVide=()
+        indexCase=0
+        #Count number of empty case and get their id
+        for i in "${tableau[@]}"
+        do
+            if [ $i -eq 0 ]
+            then
+                caseVide+=($indexCase)
+            fi
+            indexCase=$(( $indexCase + 1 ))
+        done
+        
+        local bestTemp=-1
+        local scoreTemp=1000
+        
+        for i in "${caseVide[@]}"
+        do
+            tableau[$i]=1
+            local stockItemp=$i
+            IACalcMax
+            i=$stockItemp
+            tableau[$i]=0
+            if [[ $scoreTemp -gt $scoreMinMax ]]
+            then
+                local scoreTemp=$scoreMinMax
+                local bestTemp=$i
+                if [[ $scoreTemp -eq -10 ]]
+                then
+                    break
+                fi
+            fi
+        done
+        scoreMinMax=$scoreTemp
+        bestmoove=$bestTemp
+    fi
+}
+
+IACalcMax(){
+    tempCheck=$(checkEnd)
+    #If the game is finish
+    if [[ $tempCheck -ne 0 ]]
+    then
+        if [[ $tempCheck -eq 2 ]]
+        then
+            scoreMinMax=10
+        elif [[ $tempCheck -eq 1 ]]
+        then
+            scoreMinMax=-10
+        else 
+            scoreMinMax=0
+        fi
+    else
+        local caseVide=()
+        indexCase=0
+        #Count number of empty case and get their id
+        for i in "${tableau[@]}"
+        do
+            if [ $i -eq 0 ]
+            then
+                caseVide+=($indexCase)
+            fi
+            indexCase=$(( $indexCase + 1 ))
+        done
+        
+        local bestTemp=-1
+        local scoreTemp=-1000
+        
+        for i in "${caseVide[@]}"
+        do
+            tableau[$i]=2
+            local stockItemp=$i
+            IACalcMin
+            i=$stockItemp
+            tableau[$i]=0
+            if [[ $scoreTemp -lt $scoreMinMax ]]
+            then
+                local scoreTemp=$scoreMinMax
+                local bestTemp=$i
+                if [[ $scoreTemp -eq 10 ]]
+                then
+                    break
+                fi
+            fi
+        done
+        scoreMinMax=$scoreTemp
+        bestmoove=$bestTemp
+    fi
+}
