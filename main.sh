@@ -2,6 +2,7 @@
 
 startingPlayer=$(( ( RANDOM % 2 ) + 1 ))
 tableau=( 0 0 0 0 0 0 0 0 0 )
+gameType=""
 
 function initGame(){
     #Change the person who start
@@ -19,18 +20,55 @@ function changeCurrentPlayer(){
 }
 
 function printMap(){
-    #clear
-    echo ""
+    
+    if [[ ${tableau[0]} -eq 0 ]] ; then case0=" " ; elif [[ ${tableau[0]} -eq 1 ]] ; then case0="X" ; else case0="O" ; fi
+    if [[ ${tableau[1]} -eq 0 ]] ; then case1=" " ; elif [[ ${tableau[1]} -eq 1 ]] ; then case1="X" ; else case1="O" ; fi
+    if [[ ${tableau[2]} -eq 0 ]] ; then case2=" " ; elif [[ ${tableau[2]} -eq 1 ]] ; then case2="X" ; else case2="O" ; fi
+    
+    if [[ ${tableau[3]} -eq 0 ]] ; then case3=" " ; elif [[ ${tableau[3]} -eq 1 ]] ; then case3="X" ; else case3="O" ; fi
+    if [[ ${tableau[4]} -eq 0 ]] ; then case4=" " ; elif [[ ${tableau[4]} -eq 1 ]] ; then case4="X" ; else case4="O" ; fi
+    if [[ ${tableau[5]} -eq 0 ]] ; then case5=" " ; elif [[ ${tableau[5]} -eq 1 ]] ; then case5="X" ; else case5="O" ; fi
+    
+    if [[ ${tableau[6]} -eq 0 ]] ; then case6=" " ; elif [[ ${tableau[6]} -eq 1 ]] ; then case6="X" ; else case6="O" ; fi
+    if [[ ${tableau[7]} -eq 0 ]] ; then case7=" " ; elif [[ ${tableau[7]} -eq 1 ]] ; then case7="X" ; else case7="O" ; fi
+    if [[ ${tableau[8]} -eq 0 ]] ; then case8=" " ; elif [[ ${tableau[8]} -eq 1 ]] ; then case8="X" ; else case8="O" ; fi
+    
+    if [[ $gameType == "1 Vs 1 game" ]] ; then advName="Your friend" ; else advName="AI" ; fi
+    
+    clear
+    echo 
+    echo "      " $gameType
+    echo 
+    echo "        X " $namePlayer
+    echo "        O " $advName
+    echo
     echo "            1     2     3"
     echo "         |-----|-----|-----|"
-    echo "    X    |  ${tableau[0]}  |  ${tableau[1]}  |  ${tableau[2]}  |"
+    echo "    X    |  $case0  |  $case1  |  $case2  |"
     echo "         |-----|-----|-----|"
-    echo "    Y    |  ${tableau[3]}  |  ${tableau[4]}  |  ${tableau[5]}  |"
+    echo "    Y    |  $case3  |  $case4  |  $case5  |"
     echo "         |-----|-----|-----|"
-    echo "    Z    |  ${tableau[6]}  |  ${tableau[7]}  |  ${tableau[8]}  |"
+    echo "    Z    |  $case6  |  $case7  |  $case8  |"
     echo "         |-----|-----|-----|"
     echo ""
 }
+
+printFinalMessage(){
+    echo 
+    if [[ $gameType == "1 Vs 1 game" ]] ; then advName="Your friend" ; else advName="AI" ; fi
+    
+    if [ $(checkEnd) -eq 1 ]
+    then
+        echo "You win the game !! "
+    elif [ $(checkEnd) -eq 2 ]
+    then
+        echo $advName " win the game !!"
+    else
+        echo "It's a draw !!"
+    fi
+    echo
+}
+
 
 function IARandom(){  
     compteur=0
@@ -39,26 +77,56 @@ function IARandom(){
     do
         if [ $i -eq 0 ]
         then
-            compteur=$((compteur + 1))
+            compteur=$(( $compteur + 1 ))
         fi
     done
+
     #On fait un ramdom sur ce nombre
     casePlay=$(( RANDOM % $compteur ))
     compteur=0
     for((i=0; i < 9; i++)){
-        echo ${tableau[i]}
         if [ ${tableau[i]} -eq 0 ]
         then
             if [ $compteur -eq $casePlay ]
             then
                 tableau[$i]=2
-                compteur=$((compteur + 1))
+                break
             else
-                compteur=$((compteur + 1))
+                compteur=$(( $compteur + 1 ))
             fi
         fi
     }
-    echo $casePlay
+}
+
+IAMinMaxOpt(){
+    nbEmptyCase=0
+    #Count number of empty case and get their id
+    for i in "${tableau[@]}"
+    do
+        if [ $i -eq 0 ]
+        then
+            nbEmptyCase=$(( $nbEmptyCase + 1 ))
+        fi
+    done
+    
+    if [ $nbEmptyCase -eq 9 ]
+    then
+        local randStart=$(( RANDOM % 4 ))
+        if [ $randStart -eq 0 ]
+        then 
+            bestmoove=0
+        elif [ $randStart -eq 1 ]
+        then 
+            bestmoove=2
+        elif [ $randStart -eq 2 ]
+        then 
+            bestmoove=6
+        else
+            bestmoove=8
+        fi
+    else
+        IACalcMax
+    fi  
 }
 
 IACalcMin(){
@@ -191,7 +259,12 @@ function checkEnd(){
 }
 
 function enterCase(){
-    echo "Player $currentPlayer turn : Enter case ID (X1, Y3,...)"
+    if [[ $currentPlayer -eq 1 ]]
+    then
+        echo "$namePlayer : Please enter case ID (X1, Y3,...)"
+    else
+        echo "$namePlayer's friend : Please enter case ID (X1, Y3,...)"
+    fi
     
     read caseID
     case $caseID in
@@ -265,6 +338,7 @@ function enterCase(){
 
 
 function gameOneVsOne(){
+    gameType="1 Vs 1 game"
     initGame
     printMap
     while [[ $(checkEnd) = 0 ]]
@@ -273,12 +347,13 @@ function gameOneVsOne(){
         changeCurrentPlayer
         printMap
     done
-    
+    printFinalMessage
     #Come back to choice menu
     menu
 }
 
 function gameIANoob(){
+    gameType="Game against an esay AI"
     initGame
     printMap
     while [[ $(checkEnd) = 0 ]]
@@ -294,17 +369,15 @@ function gameIANoob(){
             changeCurrentPlayer
         fi
     done
-    
+    printFinalMessage
     #Come back to choice menu
     menu
 }
 
-function gameIAForte(){
+function gameIAStrong(){
+    gameType="Game against a strong AI"
     initGame
     printMap
-    #tableau[0]=2
-    tableau[8]=1
-    currentPlayer=2
     while [[ $(checkEnd) = 0 ]]
     do
         if [ $currentPlayer -eq 1 ]
@@ -313,18 +386,20 @@ function gameIAForte(){
             printMap
             changeCurrentPlayer
         else
-            IACalcMax
+            echo "IA is playing... (it may take a while)"
+            IAMinMaxOpt
             tableau[$bestmoove]=2
             printMap
             changeCurrentPlayer
         fi
     done
+    printFinalMessage
     #come back to the menu
     menu
 }
 
 function menu(){        
-    echo "What do you want to do ?"
+    echo "What do you want to do $namePlayer ?"
     echo "  1 : Play against a friend"
     echo "  2 : Play against an easy AI"
     echo "  3 : Play against a strong AI"
@@ -334,14 +409,21 @@ function menu(){
     case $choice in
     1) gameOneVsOne;;
     2) gameIANoob;;
-    3) gameIAForte;;
+    3) gameIAStrong;;
     4) echo "Thank you for playing. Bye";;
     *) echo "Enter a valid numbze";
         menu
     esac
 }
 
+clear
 echo "----------------"
 echo "  Tic Tac Toe   "
 echo "----------------"
+echo ""
+echo "Please enter your name :"
+read namePlayer
+
+echo ""
+
 menu
